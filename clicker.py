@@ -19,7 +19,7 @@ class Clicker:
 	def __init__(self, parent):
 		self.parent = parent
 		self.tooltips = {}
-		self.the_button = tk.Button(parent, text='Click the button', width=20, height=5, command=self.increment)	
+		self.the_button = tk.Button(parent, text='Click the button! Strength:\n1', width=20, height=5, command=self.increment)	
 		self.current_clicks = 0
 		self.gear = {}
 		self.gear['clicker'] = Gear('clicker', 'Clicks per click: (%d): 1',
@@ -30,6 +30,8 @@ class Clicker:
 			'"See, here\'s how you click things."', 50, limit=5)
 		self.gear['orcish pride'] = Gear('orcish pride', 'Goblins get braver with their gremlin brethren: (%d)',
 			'Adds to your goblins\' clicks per second for every gremlin you have.', 1000, limit=1)
+		self.gear['mobster'] = Gear('mobster', 'Mobster: (%d): 0',
+			'A mobster to get a take from each building when you click.', 5000, limit=5)
 		self.gear['noob clicker'] = Gear('noob clicker', 'Noob clicker: (%d): 0',
 			'A noob at clicking, but they care!', 15, multiplier=self.gear['noob training'], per_second=1)
 		self.gear['gremlin'] = Gear('gremlin', 'A gremlin to click things: (%d): 0',
@@ -96,16 +98,38 @@ class Clicker:
 		
 		self.update()
 	
+	@property
+	def click_strength(self):
+		return int((self.gear['clicker'].quantity +
+				self.gear['mobster'].quantity *
+				sum(building.quantity for building in self.gear.values() if building.per_second)) *
+				2**self.gear['click booster'].quantity
+				)
+
+	def number_formatter(self, number):
+		if number < 10**15:
+			return '{:,}'.format(number)
+		if number < 10**308:
+			return '{:.1e}'.format(number)
+		quant = 0
+		while number > 10**308:
+			number //= 10**308
+			quant += 1
+		label = '{:.1e}'.format(number)
+		base, size = label.split('e+')
+		size = int(size) + 308*quant
+		return '{}e+{}'.format(base, self.number_formatter(size))
+
 	def increment(self):
-		self.current_clicks += self.gear['clicker'].quantity * 2**self.gear['click booster'].quantity
-		self.current_click_label.config(text='{:,}'.format(self.current_clicks))
+		self.current_clicks += self.click_strength
+		self.current_click_label.config(text=self.number_formatter(self.current_clicks))
 
 	def purchase(self, gear):
 		if self.current_clicks >= gear.cost:
 			gear.quantity += 1
 			self.current_clicks -= gear.cost
 			gear.cost = int(gear.cost * 1.1) + 1
-			self.current_click_label.config(text='{:,}'.format(self.current_clicks))
+			self.current_click_label.config(text=self.number_formatter(self.current_clicks))
 			if gear.limit and gear.quantity >= gear.limit:
 				gear.button.config(state=tk.DISABLED)
 				gear.button.config(
@@ -115,14 +139,15 @@ class Clicker:
 						text=gear.button['text'].split(':')[0] + ': {}: {}'.format(gear.cost, gear.quantity))
 
 	def update(self):
+		self.the_button.config(text='Click the button! Strength:\n{}'.format(self.click_strength))
 		per_second = base_per_second = sum(gear.per_second*gear.quantity*(
 			gear.multiplier and 2**gear.multiplier.quantity or 1) for gear in self.gear.values())
 		for gear in self.gear.values():
 			if gear.synergy_unlocked and gear.synergy_unlocked.quantity:		#objects are truthy	
 				per_second += gear.quantity * gear.synergy_building.quantity * 0.05 * base_per_second
 		self.current_clicks += int(per_second)
-		self.current_click_label.config(text='{:,}'.format(self.current_clicks))
-		self.per_second_label.config(text='{:,}'.format(int(per_second)))
+		self.current_click_label.config(text=self.number_formatter(self.current_clicks))
+		self.per_second_label.config(text=self.number_formatter(int(per_second)))
 		self.parent.after(1000, self.update)	#schedule to run itself again in 1s
 
 
