@@ -14,6 +14,7 @@ class Gear:
 		self.multiplier = multiplier
 		self.synergy_unlocked = synergy_unlocked
 		self.synergy_building = synergy_building
+
 class Clicker:
 	def __init__(self, parent):
 		self.parent = parent
