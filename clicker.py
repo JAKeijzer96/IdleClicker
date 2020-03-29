@@ -1,19 +1,41 @@
+#Source: https://www.youtube.com/playlist?list=PLQ7bGgvf9FtG4nvs7vraXdTt9CuKY6s5f
+
 import tkinter as tk
 from idlelib.tooltip import Hovertip as tip
 
 class Gear:
-	def __init__(self, name, description, tip, cost, quantity=0, per_second=0, limit=0,
+	def __init__(self, name, description_list, tip_list, cost_list, quantity=0, per_second=0, limit=0,
 					multiplier=None, synergy_unlocked=None, synergy_building=None):
 		self.name = name
-		self.description = description
-		self.tip = tip
-		self.cost = cost
+		self.description_list = description_list
+		self.tip_list = tip_list
+		self.cost_list = cost_list
 		self.quantity = quantity
 		self.per_second = per_second
 		self.limit = limit
 		self.multiplier = multiplier
 		self.synergy_unlocked = synergy_unlocked
 		self.synergy_building = synergy_building
+
+	@property
+	def description(self):
+		if self.limit and self.quantity < self.limit:
+			return self.description_list[self.quantity]
+		return self.description_list[-1]
+		
+	@property
+	def tip(self):
+		if self.limit and self.quantity < self.limit:
+			return self.tip_list[self.quantity]
+		return self.tip_list[-1]
+
+	@property
+	def cost(self):
+		if self.limit:
+			if self.quantity < self.limit:
+				return self.cost_list[self.quantity]
+			return self.cost_list[-1]
+		return int(self.cost_list[0] * 1.15**self.quantity)
 
 class Clicker:
 	def __init__(self, parent):
@@ -22,41 +44,43 @@ class Clicker:
 		self.the_button = tk.Button(parent, text='Click the button! Strength:\n1', width=20, height=5, command=self.increment)	
 		self.current_clicks = 0
 		self.gear = {}
-		self.gear['clicker'] = Gear('clicker', 'Clicks per click: (%d): 1',
-			'Click again whenever you click.', 10, quantity=1, limit=100)
-		self.gear['click booster'] = Gear('click booster',
-			'Multiplicative click booster: (%d) : 0)', 'Doubles your clicks.', 50, limit=5)
-		self.gear['noob training'] = Gear('noob training', 'Double noobs\' clicking: (%d): 0',
-			'"See, here\'s how you click things."', 50, limit=5)
-		self.gear['orcish pride'] = Gear('orcish pride', 'Goblins get braver with their gremlin brethren: (%d)',
-			'Adds to your goblins\' clicks per second for every gremlin you have.', 1000, limit=1)
-		self.gear['mobster'] = Gear('mobster', 'Mobster: (%d): 0',
-			'A mobster to get a take from each building when you click.', 5000, limit=5)
-		self.gear['noob clicker'] = Gear('noob clicker', 'Noob clicker: (%d): 0',
-			'A noob at clicking, but they care!', 15, multiplier=self.gear['noob training'], per_second=1)
-		self.gear['gremlin'] = Gear('gremlin', 'A gremlin to click things: (%d): 0',
-			'Gremlins enjoy clicking. Really.', 50, per_second=5)
-		self.gear['goblin'] = Gear('goblin', 'A goblin to provide you with clicks: (%d): 0',
-			'Goblins click more than gremlins.', 200, per_second=30,
+		self.gear['clicker'] = Gear('clicker', ['Clicks per click: (%d): 1'],
+			['Click again whenever you click.'], [10])
+		self.gear['cursor'] = Gear('cursor', ['Extra cursors: (%d): 0)'],
+			['Cursors that click all by themselves!'], [25])  
+		self.gear['click booster'] = Gear('click booster', ['Multiplicative click booster: (%d) : 0)']*5,
+			['Doubles your clicks.']*5, [50]*5, limit=5)
+		self.gear['mobster'] = Gear('mobster', ['Mobster: (%d): 0']*5,
+			['A mobster to get a take from each building when you click.']*5, [5000]*5, limit=5)
+		self.gear['noob training'] = Gear('noob training', ['Double noobs\' clicking: (%d): 0']*5,
+			'"See, here\'s how you click things."', [50]*5, limit=5)
+		self.gear['orcish pride'] = Gear('orcish pride', ['Goblins get braver with their gremlin brethren: (%d)'],
+			['Adds to your goblins\' clicks per second for every gremlin you have.'], [1000], limit=1)
+		self.gear['noob clicker'] = Gear('noob clicker', ['Noob clicker: (%d): 0'],
+			['A noob at clicking, but they care!'], [15], multiplier=self.gear['noob training'], per_second=1)
+		self.gear['gremlin'] = Gear('gremlin', ['A gremlin to click things: (%d): 0'],
+			['Gremlins enjoy clicking. Really.'], [50], per_second=5)
+		self.gear['goblin'] = Gear('goblin', ['A goblin to provide you with clicks: (%d): 0'],
+			['Goblins click more than gremlins.'], [200], per_second=30,
 			synergy_unlocked=self.gear['orcish pride'], synergy_building=self.gear['gremlin'])
-		self.gear['inclined plane'] = Gear('inclined plane','Roll some clicks your way: (%d): 0',
-			'Observe clicks in slow motion.', 500, per_second=125)
-		self.gear['pulley'] = Gear('pulley', 'Pull some clicks to you: (%d): 0',
-			'Not frictionless.', 2000, per_second=750)
-		self.gear['lever'] = Gear('lever', 'Pry some clicks up: (%d): 0',
-			'Archimedes would be proud.', 10000, per_second=5000)
-		self.gear['wedge'] = Gear('wedge', 'Stuff some extra clicks in there: (%d): 0',
-			'Can I axe you a question?', 100000, per_second=75000)
-		self.gear['elbow grease'] = Gear('elbow grease', 'Click the old fashioned way: (%d): 0',
-			'Surprisingly easy.', 500000, per_second=500000)
-		self.gear['steam-powered clicker'] = Gear('steam-powered clicker', 'A steam-powered contraption that clicks: (%d): 0',
-			'I\'m sure it\'s steampunk. I see at least five clocks.', 5000000, per_second=7500000)
-		self.gear['coal-fired clicker'] = Gear('coal-fired clicker', 'Harnass the power of coal to click: (%d): 0',
-			'Environmentally-friendly coal!', 10000000, per_second=20000000)
-		self.gear['electric clicker'] = Gear('electric clicker', 'Electric-powered clicking: (%d): 0',
-			'This electricity is generated by a donkey turning a magnet.', 50000000, per_second=125000000)
-		self.gear['digital clicker'] = Gear('digital clicker', 'Precise clicking, because computers: (%d): 0',
-			'DIGIMAL RESOMOLUTIONS!!!11!', 500000000, per_second=1500000000)
+		self.gear['inclined plane'] = Gear('inclined plane',['Roll some clicks your way: (%d): 0'],
+			['Observe clicks in slow motion.'], [500], per_second=125)
+		self.gear['pulley'] = Gear('pulley', ['Pull some clicks to you: (%d): 0'],
+			['Not frictionless.'], [2000], per_second=750)
+		self.gear['lever'] = Gear('lever', ['Pry some clicks up: (%d): 0'],
+			['Archimedes would be proud.'], [10000], per_second=5000)
+		self.gear['wedge'] = Gear('wedge', ['Stuff some extra clicks in there: (%d): 0'],
+			['Can I axe you a question?'], [100000], per_second=75000)
+		self.gear['elbow grease'] = Gear('elbow grease', ['Click the old fashioned way: (%d): 0'],
+			['Surprisingly easy.'], [500000], per_second=500000)
+		self.gear['steam-powered clicker'] = Gear('steam-powered clicker', ['A steam-powered contraption that clicks: (%d): 0'],
+			['I\'m sure it\'s steampunk. I see at least five clocks.'], [5000000], per_second=7500000)
+		self.gear['coal-fired clicker'] = Gear('coal-fired clicker', ['Harnass the power of coal to click: (%d): 0'],
+			['Environmentally-friendly coal!'], [10000000], per_second=20000000)
+		self.gear['electric clicker'] = Gear('electric clicker', ['Electric-powered clicking: (%d): 0'],
+			['This electricity is generated by a donkey turning a magnet.'], [50000000], per_second=125000000)
+		self.gear['digital clicker'] = Gear('digital clicker', ['Precise clicking, because computers: (%d): 0'],
+			['DIGIMAL RESOMOLUTIONS!!!11!'], [500000000], per_second=1500000000)
 
 		self.current_click_label = tk.Label(parent, text='0')
 		self.the_button.grid(row=0, column=0)
@@ -78,7 +102,7 @@ class Clicker:
 		self.parent.bind('<MouseWheel>', lambda x: self.upgrade_canvas.yview_scroll(-1*x.delta, 'units'))
 
 		for gear in (self.gear.values()):
-			gear.button = tk.Button(self.cframe,text=gear.description % self.gear[gear.name].cost, command=lambda x=gear: self.purchase(x))
+			gear.button = tk.Button(self.cframe,text=gear.description % gear.cost, command=lambda x=gear: self.purchase(x))
 																	#x=gear to define when defined, instead of defined when called	
 			gear.tooltip = tip(gear.button, gear.tip + ' - (%d/s)' % gear.per_second)
 		
@@ -100,7 +124,7 @@ class Clicker:
 	
 	@property
 	def click_strength(self):
-		return int((self.gear['clicker'].quantity +
+		return int((self.gear['clicker'].quantity + 1 + 		#start with one clicker
 				self.gear['mobster'].quantity *
 				sum(building.quantity for building in self.gear.values() if building.per_second)) *
 				2**self.gear['click booster'].quantity
@@ -128,7 +152,6 @@ class Clicker:
 		if self.current_clicks >= gear.cost:
 			gear.quantity += 1
 			self.current_clicks -= gear.cost
-			gear.cost = int(gear.cost * 1.1) + 1
 			self.current_click_label.config(text=self.number_formatter(self.current_clicks))
 			if gear.limit and gear.quantity >= gear.limit:
 				gear.button.config(state=tk.DISABLED)
@@ -136,16 +159,16 @@ class Clicker:
 						text=gear.button['text'].split(':')[0] + ': {} (MAX)'.format(gear.quantity))
 			else:
 				gear.button.config(
-						text=gear.button['text'].split(':')[0] + ': {}: {}'.format(gear.cost, gear.quantity))
+						text=gear.button['text'].split(':')[0] + ': ({}): {}'.format(gear.cost, gear.quantity))
 
 	def update(self):
-		self.the_button.config(text='Click the button! Strength:\n{}'.format(self.click_strength))
+		self.the_button.config(text='Click the button! Strength:\n' + self.number_formatter(self.click_strength))
 		per_second = base_per_second = sum(gear.per_second*gear.quantity*(
 			gear.multiplier and 2**gear.multiplier.quantity or 1) for gear in self.gear.values())
 		for gear in self.gear.values():
 			if gear.synergy_unlocked and gear.synergy_unlocked.quantity:		#objects are truthy	
 				per_second += gear.quantity * gear.synergy_building.quantity * 0.05 * base_per_second
-		self.current_clicks += int(per_second)
+		self.current_clicks += int(per_second) + self.gear['cursor'].quantity * self.click_strength
 		self.current_click_label.config(text=self.number_formatter(self.current_clicks))
 		self.per_second_label.config(text=self.number_formatter(int(per_second)))
 		self.parent.after(1000, self.update)	#schedule to run itself again in 1s
