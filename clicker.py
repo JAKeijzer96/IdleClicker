@@ -5,7 +5,8 @@ from idlelib.tooltip import Hovertip as tip
 
 class Gear:
 	def __init__(self, name, description_list, tip_list, cost_list, quantity=0, per_second=0, limit=0,
-					multiplier=None, synergy_unlocked=None, synergy_building=None):
+					multiplier=0, synergy_unlocked=None, synergy_building=None, power_gear=0,
+					empowered=0, empowers=0):
 		self.name = name
 		self.description_list = description_list
 		self.tip_list = tip_list
@@ -16,6 +17,9 @@ class Gear:
 		self.multiplier = multiplier
 		self.synergy_unlocked = synergy_unlocked
 		self.synergy_building = synergy_building
+		self.power_gear = power_gear
+		self.empowered = empowered
+		self.empowers = empowers
 
 	@property
 	def description(self):
@@ -60,7 +64,9 @@ class Clicker:
 			['A noob at clicking, but they care!'], [15], multiplier=self.gear['noob training'], per_second=1)
 		self.gear['gremlin'] = Gear('gremlin', ['A gremlin to click things: (%d): 0'],
 			['Gremlins enjoy clicking. Really.'], [50], per_second=5)
-		self.gear['goblin'] = Gear('goblin', ['A goblin to provide you with clicks: (%d): 0'],
+		self.gear['noob gremlins'] = Gear('noob gremlin', ['Empower gremlins per noob owned: (%d): 0'],
+			['NOOB has evolved into GREMLIN!'], [300], limit=1, power_gear=self.gear['gremlin'], empowers=self.gear['noob clicker'])
+		self.gear['goblin'] = Gear('goblin', ['A goblin to provide you with clicks: (%d): 0'],	
 			['Goblins click more than gremlins.'], [200], per_second=30,
 			synergy_unlocked=self.gear['orcish pride'], synergy_building=self.gear['gremlin'])
 		self.gear['inclined plane'] = Gear('inclined plane',['Roll some clicks your way: (%d): 0'],
@@ -101,16 +107,15 @@ class Clicker:
 		self.scrollbar.grid(row=0, column=1, sticky='NS')
 		self.parent.bind('<MouseWheel>', lambda x: self.upgrade_canvas.yview_scroll(-1*x.delta, 'units'))
 
-		for gear in (self.gear.values()):
+		for gear in self.gear.values():
 			gear.button = tk.Button(self.cframe,text=gear.description % gear.cost, command=lambda x=gear: self.purchase(x))
 																	#x=gear to define when defined, instead of defined when called	
 			gear.tooltip = tip(gear.button, gear.tip + ' - (%d/s)' % gear.per_second)
 		
-
 		manual_row = -1
 		auto_row = -1
-		for name in sorted(self.gear, key=lambda x: self.gear[x].cost):
-			if self.gear[name].per_second:
+		for gear in sorted(self.gear.values(), key=lambda x: x.cost):
+			if gear.per_second:
 				manual_row += 1
 				row = manual_row
 				column = 1
@@ -118,7 +123,7 @@ class Clicker:
 				auto_row += 1
 				row = auto_row
 				column = 0
-			self.gear[name].button.grid(row=row, column=column)
+			gear.button.grid(row=row, column=column)
 		
 		self.update()
 	
@@ -150,12 +155,13 @@ class Clicker:
 
 	def purchase(self, gear):
 		if self.current_clicks >= gear.cost:
-			gear.quantity += 1
 			self.current_clicks -= gear.cost
+			gear.quantity += 1
 			self.current_click_label.config(text=self.number_formatter(self.current_clicks))
+			if gear.empowers:
+				gear.empowers.empowerd += 1
 			if gear.limit and gear.quantity >= gear.limit:
-				gear.button.config(state=tk.DISABLED)
-				gear.button.config(
+				gear.button.config(state=tk.DISABLED,
 						text=gear.button['text'].split(':')[0] + ': {} (MAX)'.format(gear.quantity))
 			else:
 				gear.button.config(
@@ -164,15 +170,16 @@ class Clicker:
 	def update(self):
 		self.the_button.config(text='Click the button! Strength:\n' + self.number_formatter(self.click_strength))
 		per_second = base_per_second = sum(gear.per_second*gear.quantity*(
-			gear.multiplier and 2**gear.multiplier.quantity or 1) for gear in self.gear.values())
+			gear.multiplier and 2**gear.multiplier.quantity)*(2**gear.empowered) for gear in self.gear.values())
 		for gear in self.gear.values():
 			if gear.synergy_unlocked and gear.synergy_unlocked.quantity:		#objects are truthy	
 				per_second += gear.quantity * gear.synergy_building.quantity * 0.05 * base_per_second
+			if gear.power_gear and gear.quantity:
+				per_second += gear.empowers.quantity * gear.empowers.quantity * base_per_second * 0.05
 		self.current_clicks += int(per_second) + self.gear['cursor'].quantity * self.click_strength
 		self.current_click_label.config(text=self.number_formatter(self.current_clicks))
 		self.per_second_label.config(text=self.number_formatter(int(per_second)))
 		self.parent.after(1000, self.update)	#schedule to run itself again in 1s
-
 
 root = tk.Tk()
 clicker = Clicker(root)
