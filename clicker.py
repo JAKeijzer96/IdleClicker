@@ -46,7 +46,7 @@ class Clicker:
 		self.parent = parent
 		self.tooltips = {}
 		self.the_button = tk.Button(parent, text='Click the button! Strength:\n1', width=20, height=5, command=self.increment)	
-		self.current_clicks = 0
+		self.current_clicks = 100000
 		self.gear = {}
 		self.gear['clicker'] = Gear('clicker', ['Clicks per click: (%d): 1'],
 			['Click again whenever you click.'], [10])
@@ -54,6 +54,8 @@ class Clicker:
 			['Cursors that click all by themselves!'], [25])  
 		self.gear['click booster'] = Gear('click booster', ['Multiplicative click booster: (%d) : 0)']*5,
 			['Doubles your clicks.']*5, [50]*5, limit=5)
+		self.gear['cps to click'] = Gear('cps to click', ['Adds a percentage of cps to each click: (%d): 0']*10,
+			['Clicks per second per click!']*10, [200]*10, limit=10)
 		self.gear['mobster'] = Gear('mobster', ['Mobster: (%d): 0']*5,
 			['A mobster to get a take from each building when you click.']*5, [5000]*5, limit=5)
 		self.gear['noob training'] = Gear('noob training', ['Double noobs\' clicking: (%d): 0']*5,
@@ -129,11 +131,23 @@ class Clicker:
 	
 	@property
 	def click_strength(self):
-		return int((self.gear['clicker'].quantity + 1 + 		#start with one clicker
+		return int((self.gear['clicker'].quantity + 1 +						#+1 because we start with 1 clicker
 				self.gear['mobster'].quantity *
 				sum(building.quantity for building in self.gear.values() if building.per_second)) *
-				2**self.gear['click booster'].quantity
+				2**self.gear['click booster'].quantity +
+				self.per_second*1.01**self.gear['cps to click'].quantity
 				)
+	
+	@property
+	def per_second(self):
+		per_second = base_per_second = sum(gear.per_second*gear.quantity*(
+			gear.multiplier and 2**gear.multiplier.quantity or 1)*(2**gear.empowered) for gear in self.gear.values())
+		for gear in self.gear.values():
+			if gear.synergy_unlocked and gear.synergy_unlocked.quantity:		#objects are truthy	
+				per_second += gear.quantity * gear.synergy_building.quantity * 0.05 * base_per_second
+			if gear.power_gear and gear.quantity:
+				per_second += gear.empowers.quantity * gear.empowers.quantity * base_per_second * 0.05
+		return per_second
 
 	def number_formatter(self, number):
 		if number < 10**15:
@@ -169,13 +183,7 @@ class Clicker:
 
 	def update(self):
 		self.the_button.config(text='Click the button! Strength:\n' + self.number_formatter(self.click_strength))
-		per_second = base_per_second = sum(gear.per_second*gear.quantity*(
-			gear.multiplier and 2**gear.multiplier.quantity)*(2**gear.empowered) for gear in self.gear.values())
-		for gear in self.gear.values():
-			if gear.synergy_unlocked and gear.synergy_unlocked.quantity:		#objects are truthy	
-				per_second += gear.quantity * gear.synergy_building.quantity * 0.05 * base_per_second
-			if gear.power_gear and gear.quantity:
-				per_second += gear.empowers.quantity * gear.empowers.quantity * base_per_second * 0.05
+		per_second = self.per_second
 		self.current_clicks += int(per_second) + self.gear['cursor'].quantity * self.click_strength
 		self.current_click_label.config(text=self.number_formatter(self.current_clicks))
 		self.per_second_label.config(text=self.number_formatter(int(per_second)))
