@@ -53,7 +53,7 @@ class Clicker:
 		self.purchase_direction = 1
 		self.gear = {}
 		#Read all gear from a file
-		with open('clicker_gear_expanded.txt') as f:
+		with open('clicker_gear.txt') as f:
 			for line in f:
 				d = ast.literal_eval(line)
 				self.gear[d['name']] = Gear(**d)  #**d unpacks mapping (dictionary structure)
@@ -89,10 +89,10 @@ class Clicker:
 		self.parent.bind('<MouseWheel>', lambda x: self.upgrade_canvas.yview_scroll(-1*x.delta, 'units'))
 
 		for gear in self.gear.values():
-			gear.button = tk.Button(self.cframe,text=gear.description % gear.cost, command=lambda x=gear: self.purchase(x))
+			gear.button = tk.Button(self.cframe,text=gear.description % self.number_formatter(gear.cost), command=lambda x=gear: self.purchase(x))
 																	#x=gear to define when defined, instead of defined when called	
 			if gear.per_second:
-				gear.tooltip = tip(gear.button, gear.tip + ' - (%d/s)' % gear.per_second)
+				gear.tooltip = tip(gear.button, gear.tip + ' - (%s/s)' % self.number_formatter(gear.per_second))
 			else:
 				gear.tooltip = tip(gear.button, gear.tip)
 		
