@@ -1,4 +1,4 @@
-#Source: https://www.youtube.com/playlist?list=PLQ7bGgvf9FtG4nvs7vraXdTt9CuKY6s5f
+# Source: https://www.youtube.com/playlist?list=PLQ7bGgvf9FtG4nvs7vraXdTt9CuKY6s5f
 
 import tkinter as tk
 from idlelib.tooltip import Hovertip as tip
@@ -54,17 +54,19 @@ class Clicker:
 		self.current_clicks = 100000
 		self.cumulative_clicks = 0
 		self.purchase_direction = 1
-		self.super_click = 1
-		self.golden_duration = 16
-		self.golden_faster = 1
+		self.golden_buff_strength = 1 # or 1024
+		self.golden_buff_duration = 16 # or 32
+		self.golden_button_delay_unit = 60 # or 30
+		self.golden_button_duration = 16 # or 32
+		self.golden_button_running = lambda: None
 		self.gear = {}
 		self.callbacks = {'golden':self.golden}
 
-		#Read all gear from a file
+		# Read all gear from a file
 		with open('clicker_gear.txt') as f:
 			for line in f:
 				d = ast.literal_eval(line)
-				self.gear[d['name']] = Gear(**d)  #**d unpacks mapping (dictionary structure)
+				self.gear[d['name']] = Gear(**d)  # **d unpacks mapping (dictionary structure)
 		for gear in self.gear.values():
 			if gear.multiplier:
 				gear.multiplier = self.gear[gear.multiplier]
@@ -84,8 +86,8 @@ class Clicker:
 		self.current_click_label.grid(row=0, column=1)
 		self.per_second_label = tk.Label(parent, text='0')
 		self.per_second_label.grid(row=0, column=2)
-		#Scrollbar code
-		self.upgrade_frame = tk.Frame(parent)			#application>frame>canvas>frame which holds the buttons
+		# Scrollbar code
+		self.upgrade_frame = tk.Frame(parent)			# application>frame>canvas>frame which holds the buttons
 		self.upgrade_frame.grid(row=1, column=1, columnspan=2)
 		self.scrollbar = tk.Scrollbar(self.upgrade_frame, orient=tk.VERTICAL)
 		self.upgrade_canvas = tk.Canvas(self.upgrade_frame, yscrollcommand=self.scrollbar.set)
@@ -101,7 +103,7 @@ class Clicker:
 		for gear in self.gear.values():
 			gear.button = tk.Button(self.cframe,text=gear.description.format(self.number_formatter(gear.cost),
 																									self.number_formatter(gear.quantity)),
-									command=lambda x=gear: self.purchase(x)) #x=gear to define when defined, instead of defined when called	
+									command=lambda x=gear: self.purchase(x)) # x=gear to define when defined, instead of defined when called	
 			if gear.per_second:
 				gear.tooltip = tip(gear.button, '{} - ({}/s)'.format(gear.tip, self.number_formatter(gear.per_second)))
 			else:
@@ -127,15 +129,24 @@ class Clicker:
 
 	def golden(self):
 		self.golden_button.grid_forget()
-		self.super_click = 1024
+		self.golden_buff_strength = 1024
+		self.parent.after_cancel(self.golden_button_running)	# cancel any scheduled after calls
 
 		def reduce_click():
-			self.super_click = 1
+			self.golden_buff_strength = 1
 		def add_button():
 			self.golden_button.grid(row=1, column=0)
-		self.parent.after(self.golden_duration*1000, reduce_click)
-		self.parent.after(random.randint(60, 120)*1000//self.golden_faster, add_button)
+			self.golden_button_running = self.parent.after(self.golden_button_duration*1000, remove_button)
+			#self.golden_button_running = self.parent.after(1000, remove_button) # test value
+		def remove_button():
+			self.golden_button.grid_forget()
+			self.golden_button_running = self.parent.after(random.randint(3, 5)*self.golden_button_delay_unit*1000, add_button)
+			#self.golden_button_running = self.parent.after(3000, add_button) # test value
 
+		self.parent.after(self.golden_buff_duration*1000, reduce_click)
+		self.parent.after(random.randint(3, 5)*self.golden_button_delay_unit*1000, add_button)
+		#self.parent.after(5000, reduce_click) # test value
+		#self.parent.after(10000, add_button) # test value
 
 	def purchase_toggle(self, event=None):
 		self.purchase_direction *= -1
@@ -144,11 +155,11 @@ class Clicker:
 
 	@property
 	def click_strength(self):
-		return int((self.gear['clicker'].quantity + 1 +						#+1 because we start with 1 clicker
+		return int((self.gear['clicker'].quantity + 1 +						# +1 because we start with 1 clicker
 				self.gear['mobster'].quantity *
 				sum(building.quantity for building in self.gear.values() if building.per_second) +
 				self.gear['cps to click'].quantity*0.01*self.per_second) * 
-				2**self.gear['click booster'].quantity * self.super_click
+				2**self.gear['click booster'].quantity * self.golden_buff_strength
 				)
 	
 	@property
@@ -156,7 +167,7 @@ class Clicker:
 		per_second = base_per_second = sum(gear.per_second*gear.quantity*(
 			gear.multiplier and 2**gear.multiplier.quantity or 1)*2**gear.empowered  for gear in self.gear.values())
 		for gear in self.gear.values():
-			if gear.synergy_unlocked and gear.synergy_unlocked.quantity:		#objects are truthy	
+			if gear.synergy_unlocked and gear.synergy_unlocked.quantity:		# objects are truthy	
 				per_second += gear.quantity * gear.synergy_building.quantity * 0.05 * base_per_second
 			if gear.power_gear and gear.quantity:
 				per_second += gear.power_gear.quantity * gear.empowers.quantity * base_per_second * 0.05
@@ -165,7 +176,7 @@ class Clicker:
 	def number_formatter(self, number):
 		if number < 10**15:
 			return '{:,}'.format(number)
-		if number < 10**308:		#10**308 is the limit for floats
+		if number < 10**308:		# 10**308 is the limit for floats
 			return '{:.1e}'.format(number)
 		quant = 0
 		while number > 10**308:
@@ -183,12 +194,12 @@ class Clicker:
 
 	def purchase(self, gear):
 		if self.purchase_direction == 1:
-			if self.current_clicks < gear.cost:		#if the user doesn't have enough clicks to buy gear
+			if self.current_clicks < gear.cost:		# if the user doesn't have enough clicks to buy gear
 				return
 			self.current_clicks -= gear.cost * self.purchase_direction
 			gear.quantity += self.purchase_direction
 		else:									
-			if not gear.quantity:						#if there is no gear to sell
+			if not gear.quantity:						# if there is no gear to sell
 				return
 			gear.quantity += self.purchase_direction
 			self.current_clicks -= gear.cost * self.purchase_direction
@@ -213,8 +224,9 @@ class Clicker:
 		self.cumulative_clicks += additional
 		self.current_click_label.config(text='Current clicks:\n' + self.number_formatter(self.current_clicks))
 		self.per_second_label.config(text='Clicks per second:\n' + self.number_formatter(int(per_second)))
-		self.parent.after(1000, self.update)	#schedule to run itself again in 1s
+		self.parent.after(1000, self.update)	# schedule to run itself again in 1s
 
 root = tk.Tk()
+root.title('Idleclicker')
 clicker = Clicker(root)
 root.mainloop()
