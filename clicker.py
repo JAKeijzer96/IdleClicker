@@ -4,11 +4,12 @@ import tkinter as tk
 from idlelib.tooltip import Hovertip as tip
 from tkinter import messagebox
 import ast
+import random
 
 class Gear:
 	def __init__(self, name, description_list, tip_list, cost_list, quantity=0, per_second=0, limit=0,
 					multiplier=0, synergy_unlocked=None, synergy_building=None, power_gear=0,
-					empowered=0, empowers=0):
+					empowered=0, empowers=0, callback=None):
 		self.name = name
 		self.description_list = description_list
 		self.tip_list = tip_list
@@ -22,6 +23,7 @@ class Gear:
 		self.power_gear = power_gear
 		self.empowered = empowered
 		self.empowers = empowers
+		self.callback = callback
 
 	@property
 	def description(self):
@@ -47,11 +49,17 @@ class Clicker:
 	def __init__(self, parent):
 		self.parent = parent
 		self.tooltips = {}
-		self.the_button = tk.Button(parent, text='Click the button! Strength:\n1', width=20, height=5, command=self.increment)	
+		self.the_button = tk.Button(parent, text='Click the button! Strength:\n', width=20, height=5, command=self.increment)	
+		self.golden_button = tk.Button(parent, text='Activate super\nclicking power!', width=20, height=5, command=self.golden)	
 		self.current_clicks = 100000
 		self.cumulative_clicks = 0
 		self.purchase_direction = 1
+		self.super_click = 1
+		self.golden_duration = 16
+		self.golden_faster = 1
 		self.gear = {}
+		self.callbacks = {'golden':self.golden}
+
 		#Read all gear from a file
 		with open('clicker_gear.txt') as f:
 			for line in f:
@@ -68,6 +76,8 @@ class Clicker:
 				gear.power_gear = self.gear[gear.power_gear]
 			if gear.empowers:
 				gear.empowers = self.gear[gear.empowers]
+			if gear.callback:
+				gear.callback = self.callbacks[gear.callback]
 
 		self.current_click_label = tk.Label(parent, text='0')
 		self.the_button.grid(row=0, column=0)
@@ -114,7 +124,19 @@ class Clicker:
 				message='Cumulative clicks:\n' + self.number_formatter(self.cumulative_clicks)))
 		self.parent.bind('r', self.purchase_toggle)
 		self.update()
-	
+
+	def golden(self):
+		self.golden_button.grid_forget()
+		self.super_click = 1024
+
+		def reduce_click():
+			self.super_click = 1
+		def add_button():
+			self.golden_button.grid(row=1, column=0)
+		self.parent.after(self.golden_duration*1000, reduce_click)
+		self.parent.after(random.randint(60, 120)*1000//self.golden_faster, add_button)
+
+
 	def purchase_toggle(self, event=None):
 		self.purchase_direction *= -1
 		messagebox.showinfo(title='Purchase/refund',
@@ -124,9 +146,9 @@ class Clicker:
 	def click_strength(self):
 		return int((self.gear['clicker'].quantity + 1 +						#+1 because we start with 1 clicker
 				self.gear['mobster'].quantity *
-				sum(building.quantity for building in self.gear.values() if building.per_second)) +
-				(self.gear['cps to click'].quantity and self.per_second*0.01) * 
-				2**self.gear['click booster'].quantity
+				sum(building.quantity for building in self.gear.values() if building.per_second) +
+				self.gear['cps to click'].quantity*0.01*self.per_second) * 
+				2**self.gear['click booster'].quantity * self.super_click
 				)
 	
 	@property
@@ -174,6 +196,8 @@ class Clicker:
 		self.current_click_label.config(text='Current clicks:\n' + self.number_formatter(self.current_clicks))
 		if gear.empowers:
 			gear.empowers.empowered += self.purchase_direction
+		if gear.callback:
+			gear.callback()
 		if gear.limit and gear.quantity >= gear.limit:
 			gear.button.config(state=tk.DISABLED, 
 				text=gear.description.format(self.number_formatter(gear.cost), '(MAX)'))
