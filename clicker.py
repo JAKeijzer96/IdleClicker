@@ -67,7 +67,7 @@ class Clicker:
 			if gear.power_gear:
 				gear.power_gear = self.gear[gear.power_gear]
 			if gear.empowers:
-				gear.empower = self.gear[gear.empowers]
+				gear.empowers = self.gear[gear.empowers]
 
 		self.current_click_label = tk.Label(parent, text='0')
 		self.the_button.grid(row=0, column=0)
@@ -89,10 +89,11 @@ class Clicker:
 		self.parent.bind('<MouseWheel>', lambda x: self.upgrade_canvas.yview_scroll(-1*x.delta, 'units'))
 
 		for gear in self.gear.values():
-			gear.button = tk.Button(self.cframe,text=gear.description % self.number_formatter(gear.cost), command=lambda x=gear: self.purchase(x))
-																	#x=gear to define when defined, instead of defined when called	
+			gear.button = tk.Button(self.cframe,text=gear.description.format(self.number_formatter(gear.cost),
+																									self.number_formatter(gear.quantity)),
+									command=lambda x=gear: self.purchase(x)) #x=gear to define when defined, instead of defined when called	
 			if gear.per_second:
-				gear.tooltip = tip(gear.button, gear.tip + ' - (%s/s)' % self.number_formatter(gear.per_second))
+				gear.tooltip = tip(gear.button, '{} - ({}/s)'.format(gear.tip, self.number_formatter(gear.per_second)))
 			else:
 				gear.tooltip = tip(gear.button, gear.tip)
 		
@@ -136,13 +137,13 @@ class Clicker:
 			if gear.synergy_unlocked and gear.synergy_unlocked.quantity:		#objects are truthy	
 				per_second += gear.quantity * gear.synergy_building.quantity * 0.05 * base_per_second
 			if gear.power_gear and gear.quantity:
-				per_second += gear.empowers.quantity * gear.empowers.quantity * base_per_second * 0.05
+				per_second += gear.power_gear.quantity * gear.empowers.quantity * base_per_second * 0.05
 		return per_second * 1.01**self.gear['cps multiplier'].quantity
 
 	def number_formatter(self, number):
 		if number < 10**15:
 			return '{:,}'.format(number)
-		if number < 10**308:
+		if number < 10**308:		#10**308 is the limit for floats
 			return '{:.1e}'.format(number)
 		quant = 0
 		while number > 10**308:
@@ -172,13 +173,13 @@ class Clicker:
 
 		self.current_click_label.config(text='Current clicks:\n' + self.number_formatter(self.current_clicks))
 		if gear.empowers:
-			gear.empowers.empowerd += self.purchase_direction
+			gear.empowers.empowered += self.purchase_direction
 		if gear.limit and gear.quantity >= gear.limit:
-			gear.button.config(state=tk.DISABLED,
-					text=gear.button['text'].split(':')[0] + ': {} (MAX)'.format(gear.quantity))
+			gear.button.config(state=tk.DISABLED, 
+				text=gear.description.format(self.number_formatter(gear.cost), '(MAX)'))
 		else:
 			gear.button.config(
-					text=gear.button['text'].split(':')[0] + ': ({}): {}'.format(gear.cost, gear.quantity))
+				text=gear.description.format(self.number_formatter(gear.cost), self.number_formatter(gear.quantity)))
 
 	def update(self):
 		self.the_button.config(text='Click the button! Strength:\n' + self.number_formatter(self.click_strength))
