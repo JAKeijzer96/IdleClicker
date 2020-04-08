@@ -7,13 +7,16 @@ import ast
 import random
 
 class Gear:
-	def __init__(self, name, description_list, tip_list, cost_list, quantity=0, per_second=0, limit=0,
+	def __init__(self, name, description_list, tip_list, cost_list, visibility_list, visible=False,
+					quantity=0, per_second=0, limit=0,
 					multiplier=0, synergy_unlocked=None, synergy_building=None, power_gear=0,
 					empowered=0, empowers=0, callback=None):
 		self.name = name
 		self.description_list = description_list
 		self.tip_list = tip_list
 		self.cost_list = cost_list
+		self.visibility_list = visibility_list
+		self.visible = visible
 		self.quantity = quantity
 		self.per_second = per_second
 		self.limit = limit
@@ -51,7 +54,7 @@ class Clicker:
 		self.tooltips = {}
 		self.the_button = tk.Button(parent, text='Click the button! Strength:\n', width=20, height=5, command=self.increment)	
 		self.golden_button = tk.Button(parent, text='Activate super\nclicking power!', width=20, height=5, command=self.golden)	
-		self.current_clicks = 100000
+		self.current_clicks = 0
 		self.cumulative_clicks = 0
 		self.purchase_direction = 1
 		self.golden_buff_strength = 1 # or 1024
@@ -81,6 +84,9 @@ class Clicker:
 			if gear.callback:
 				gear.callback = self.callbacks[gear.callback]
 
+		canvas_width=900
+		canvas_height=200
+
 		self.current_click_label = tk.Label(parent, text='0')
 		self.the_button.grid(row=0, column=0)
 		self.current_click_label.grid(row=0, column=1)
@@ -90,10 +96,10 @@ class Clicker:
 		self.upgrade_frame = tk.Frame(parent)			# application>frame>canvas>frame which holds the buttons
 		self.upgrade_frame.grid(row=1, column=1, columnspan=2)
 		self.scrollbar = tk.Scrollbar(self.upgrade_frame, orient=tk.VERTICAL)
-		self.upgrade_canvas = tk.Canvas(self.upgrade_frame, yscrollcommand=self.scrollbar.set)
+		self.upgrade_canvas = tk.Canvas(self.upgrade_frame, width=canvas_width, height=canvas_height, yscrollcommand=self.scrollbar.set)
 		self.cframe = tk.Frame(self.upgrade_canvas)
 		self.cframe.bind('<Configure>', lambda x: self.upgrade_canvas.configure(
-			scrollregion=self.upgrade_canvas.bbox('all'), width=900, height=200))
+			scrollregion=self.upgrade_canvas.bbox('all'), width=canvas_width, height=canvas_height))
 		self.cwindow = self.upgrade_canvas.create_window((0,0), window=self.cframe, anchor='nw')
 		self.scrollbar.config(command=self.upgrade_canvas.yview)
 		self.upgrade_canvas.grid(row=0, column=0)
@@ -109,22 +115,15 @@ class Clicker:
 			else:
 				gear.tooltip = tip(gear.button, gear.tip)
 		
-		manual_row = -1
-		auto_row = -1
-		for gear in sorted(self.gear.values(), key=lambda x: x.cost):
-			if gear.per_second:
-				manual_row += 1
-				row = manual_row
-				column = 1
-			else:
-				auto_row += 1
-				row = auto_row
-				column = 0
-			gear.button.grid(row=row, column=column)
+		# Variables for gridding buttons on the correct rows
+		self.manual_row = -1
+		self.auto_row = -1
 		
 		self.parent.bind('c', lambda x: messagebox.showinfo(title='Cumulative clicks:',
 				message='Cumulative clicks:\n' + self.number_formatter(self.cumulative_clicks)))
 		self.parent.bind('r', self.purchase_toggle)
+
+
 		self.update()
 
 	def golden(self):
@@ -222,6 +221,24 @@ class Clicker:
 		additional = int(per_second) + self.gear['cursor'].quantity * self.click_strength
 		self.current_clicks += additional
 		self.cumulative_clicks += additional
+
+
+		for gear in sorted(self.gear.values(), key=lambda x: x.cost):
+			if gear.visible:
+				continue
+			if gear.quantity or gear.visibility_list[gear.quantity] > self.cumulative_clicks:
+				break
+			if gear.per_second:
+				self.manual_row += 1
+				row = self.manual_row
+				column = 1
+			else:
+				self.auto_row += 1
+				row = self.auto_row
+				column = 0
+			gear.visible = True
+			gear.button.grid(row=row, column=column)
+
 		self.current_click_label.config(text='Current clicks:\n' + self.number_formatter(self.current_clicks))
 		self.per_second_label.config(text='Clicks per second:\n' + self.number_formatter(int(per_second)))
 		self.parent.after(1000, self.update)	# schedule to run itself again in 1s
