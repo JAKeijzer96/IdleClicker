@@ -181,13 +181,14 @@ class Clicker:
 	@property
 	def per_second(self):
 		per_second = base_per_second = sum(gear.per_second*gear.quantity*(
-			gear.multiplier and 2**gear.multiplier.quantity or 1)*2**gear.empowered  for gear in self.gear.values())
+												gear.multiplier and 2**gear.multiplier.quantity or 1)*
+												2**gear.empowered  for gear in self.gear.values())
 		for gear in self.gear.values():
 			if gear.synergy_unlocked and gear.synergy_unlocked.quantity:		# objects are truthy	
 				per_second += gear.quantity * gear.synergy_building.quantity * base_per_second * 0.05
 			if gear.power_gear and gear.quantity:
 				per_second += gear.power_gear.quantity * gear.empowers.quantity * base_per_second * 0.05
-		return per_second * 1.01**self.gear['cps multiplier'].quantity
+		return int(per_second * 1.01**self.gear['cps multiplier'].quantity)
 
 	# Function to format big numbers and present them nicely in a string
 	# The function calls itself recursively as the size of the exponent gets large
@@ -243,10 +244,9 @@ class Clicker:
 	# Function to update the state of the game. It calls itself every second
 	def update(self):
 		self.the_button.config(text='Click the button! Strength:\n' + self.number_formatter(self.click_strength))
-		per_second = self.per_second
-		additional = int(per_second) + self.gear['cursor'].quantity * self.click_strength
-		self.current_clicks += additional
-		self.cumulative_clicks += additional
+		per_second = self.per_second + self.gear['cursor'].quantity * self.click_strength
+		self.current_clicks += per_second
+		self.cumulative_clicks += per_second
 
 		# Grid the gear buttons, allowing them to show up 
 		for gear in sorted(self.gear.values(), key=lambda x: x.cost):
@@ -270,7 +270,7 @@ class Clicker:
 
 		# Update the labels
 		self.current_click_label.config(text='Current clicks:\n' + self.number_formatter(self.current_clicks))
-		self.per_second_label.config(text='Clicks per second:\n' + self.number_formatter(int(per_second)))
+		self.per_second_label.config(text='Clicks per second:\n' + self.number_formatter(per_second))
 		self.parent.after(1000, self.update)	# schedule to run itself again in 1s
 
 # Main loop of the program
