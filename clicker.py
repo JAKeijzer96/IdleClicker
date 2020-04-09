@@ -12,6 +12,7 @@
 import tkinter as tk
 from idlelib.tooltip import Hovertip as tip
 from tkinter import messagebox
+from tkinter import Toplevel
 import ast
 import random
 
@@ -146,10 +147,15 @@ class Clicker:
 
 	# Function to provide basic information to the player
 	def help(self):
-		messagebox.showinfo(title='Help',
-			message='Welcome to IdleClicker!\n\nThe goal of this game is to gain as many clicks as possible.\n' +
-						'Press [c] to see your cumulative clicks.\nPress [r] to toggle between buying and refunding gear.\n' +
-						'Hover over gear for extra information.\nHappy clicking!')
+		help = Toplevel(width=100, height=100)
+		help.title('Help')
+		message_content = 'Welcome to IdleClicker!\n\nThe goal of this game is to gain as many clicks as possible.\n'\
+						'Press [c] to see your cumulative clicks.\nPress [r] to toggle between buying and refunding gear.\n'\
+						'Hover over gear for extra information.\nHappy clicking!'
+		message = tk.Message(help, text=message_content)
+		message.pack()
+		button = tk.Button(help, text='Ok', command=help.destroy)
+		button.pack()
 
 	# Function to make the golden click button show up periodically once it has been unlocked
 	# Contains multiple sub-functions that call eachother
