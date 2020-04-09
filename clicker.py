@@ -1,4 +1,13 @@
-# Source: https://www.youtube.com/playlist?list=PLQ7bGgvf9FtG4nvs7vraXdTt9CuKY6s5f
+# -------------------------------
+# Name: Idle clicker
+# Author: Jasper Keijzer
+# 
+# Created: 25/03/2020
+# Inspiration & source for large amount of code:
+# TigerhawkT3
+# https://github.com/TigerhawkT3/idle-clicker
+# https://www.youtube.com/playlist?list=PLQ7bGgvf9FtG4nvs7vraXdTt9CuKY6s5f
+# -------------------------------
 
 import tkinter as tk
 from idlelib.tooltip import Hovertip as tip
@@ -57,7 +66,8 @@ class Clicker:
 		self.parent = parent
 		self.tooltips = {}
 		self.the_button = tk.Button(parent, text='Click the button! Strength:\n', width=20, height=5, command=self.increment)	
-		self.golden_button = tk.Button(parent, text='Activate super\nclicking power!', width=20, height=5, command=self.golden)	
+		self.golden_button = tk.Button(parent, text='Activate super\nclicking power!', width=20, height=5, command=self.golden)
+		self.help_button = tk.Button(parent, text='Help', command=self.help)
 		self.current_clicks = 0
 		self.cumulative_clicks = 0
 		self.purchase_direction = 1 # Switches between 1 (buy) and -1 (refund)
@@ -93,9 +103,10 @@ class Clicker:
 				gear.callback = self.callbacks[gear.callback]
 
 		canvas_width=730
-		canvas_height=200
+		canvas_height=250
 		self.current_click_label = tk.Label(parent, text='0')
 		self.the_button.grid(row=0, column=0)
+		self.help_button.grid(row=2, column=0)
 		self.current_click_label.grid(row=0, column=1)
 		self.per_second_label = tk.Label(parent, text='0')
 		self.per_second_label.grid(row=0, column=2)
@@ -132,6 +143,13 @@ class Clicker:
 
 		#Call the update function for the first time and start the game
 		self.update()
+
+	# Function to provide basic information to the player
+	def help(self):
+		messagebox.showinfo(title='Help',
+			message='Welcome to IdleClicker!\n\nThe goal of this game is to gain as many clicks as possible.\n' +
+						'Press [c] to see your cumulative clicks.\nPress [r] to toggle between buying and refunding gear.\n' +
+						'Hover over gear for extra information.\nHappy clicking!')
 
 	# Function to make the golden click button show up periodically once it has been unlocked
 	# Contains multiple sub-functions that call eachother
@@ -252,7 +270,7 @@ class Clicker:
 			# If the current gear is already visible, continue with the next one
 			if gear.visible:
 				continue
-			# If threshold for the current gear to show up is less than the cumulative clicks, end the loop
+			# If cost for the current gear to show up is less than the cumulative clicks, end the loop
 			if gear.cost > self.cumulative_clicks:
 				break
 			# Assign the correct row and column to the button and increment row for the next button
