@@ -54,8 +54,8 @@ class Clicker:
 		self.tooltips = {}
 		self.the_button = tk.Button(parent, text='Click the button! Strength:\n', width=20, height=5, command=self.increment)	
 		self.golden_button = tk.Button(parent, text='Activate super\nclicking power!', width=20, height=5, command=self.golden)	
-		self.current_clicks = 100000
-		self.cumulative_clicks = 100000
+		self.current_clicks = 0
+		self.cumulative_clicks = 0
 		self.purchase_direction = 1
 		self.golden_buff_strength = 1 # or 1024
 		self.golden_buff_duration = 16 # or 32
@@ -84,7 +84,7 @@ class Clicker:
 			if gear.callback:
 				gear.callback = self.callbacks[gear.callback]
 
-		canvas_width=500
+		canvas_width=730
 		canvas_height=200
 
 		self.current_click_label = tk.Label(parent, text='0')
@@ -107,7 +107,7 @@ class Clicker:
 		self.parent.bind('<MouseWheel>', lambda x: self.upgrade_canvas.yview_scroll(-1*x.delta, 'units'))
 
 		for gear in self.gear.values():
-			gear.button = tk.Button(self.cframe,text=gear.description.format(self.number_formatter(gear.cost),
+			gear.button = tk.Button(self.cframe, width=42, text=gear.description.format(self.number_formatter(gear.cost),
 																									self.number_formatter(gear.quantity)),
 									command=lambda x=gear: self.purchase(x)) # x=gear to define when defined, instead of defined when called	
 			if gear.per_second:
