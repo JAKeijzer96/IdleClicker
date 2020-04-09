@@ -7,14 +7,13 @@ import ast
 import random
 
 class Gear:
-	def __init__(self, name, description_list, tip_list, cost_list, visibility_list, visible=False,
+	def __init__(self, name, description_list, tip_list, cost_list, visible=False,
 					quantity=0, per_second=0, limit=0, multiplier=0, synergy_unlocked=None, synergy_building=None,
 					power_gear=0, empowered=0, empowers=0, callback=None):
 		self.name = name
 		self.description_list = description_list
 		self.tip_list = tip_list
 		self.cost_list = cost_list
-		self.visibility_list = visibility_list
 		self.visible = visible
 		self.quantity = quantity
 		self.per_second = per_second
@@ -254,7 +253,7 @@ class Clicker:
 			if gear.visible:
 				continue
 			# If threshold for the current gear to show up is less than the cumulative clicks, end the loop
-			if gear.visibility_list[gear.quantity] > self.cumulative_clicks:
+			if gear.cost > self.cumulative_clicks:
 				break
 			# Assign the correct row and column to the button and increment row for the next button
 			if gear.per_second:
