@@ -1,21 +1,21 @@
-400649
-417003
-clicker: 3
-cursor: 12
-click booster: 5
-cps to click: 2
-cps multiplier: 2
+24
+2400000
+clicker: 0
+cursor: 1
+click booster: 0
+cps to click: 0
+cps multiplier: 1
 mobster: 0
 golden click: 0
-noob training: 3
-orcish pride: 1
+noob training: 0
+orcish pride: 0
 noob clicker: 0
 gremlin: 0
-gremlin noob: 1
+gremlin noob: 0
 goblin: 0
-inclined plane: 1
-pulley: 1
-lever: 1
+inclined plane: 0
+pulley: 0
+lever: 0
 wedge: 0
 elbow grease: 0
 steam-powered clicker: 0

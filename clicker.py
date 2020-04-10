@@ -9,12 +9,34 @@
 # https://www.youtube.com/playlist?list=PLQ7bGgvf9FtG4nvs7vraXdTt9CuKY6s5f
 # -------------------------------
 
-import tkinter as tk
-from idlelib.tooltip import Hovertip as tip
-from tkinter import messagebox
-from tkinter import Toplevel
-import ast
-import random
+
+
+# TODO
+# https://stackoverflow.com/a/18606459
+try:
+	import tkinter as tk
+except:
+	print("The tkinter module cannot be found or is not installed.")
+try:
+	from idlelib.tooltip import Hovertip as tip
+except:
+	print("The idlelib.tooltip/Hovertip module cannot be found or is not installed")
+try:
+	from tkinter import messagebox
+except:
+	print("The tkinter/messagebox module cannot be found or is not installed.")
+try:
+	from tkinter import Toplevel
+except:
+	print("The tkinter/Toplevel module cannot be found or is not installed.")
+try:
+	import ast
+except:
+	print("The ast module cannot be found or is not installed.")
+try:
+	import random
+except:
+	print("The random module cannot be found or is not installed.")
 
 class Gear:
 	def __init__(self, name, description_list, tip_list, cost_list, visible=False,
@@ -166,13 +188,18 @@ class Clicker:
 		with open('save.txt', 'w') as file:
 			file.write('{}\n{}\n'.format(self.current_clicks, self.cumulative_clicks))
 			for gear in self.gear.values():
-				file.write('{}: {}\n'.format(gear.name, gear.quantity))
+				file.write('{}:{}\n'.format(gear.name, gear.quantity))
+				
 	
 	def load(self, event=None):
 		with open('save.txt') as file:
-			for line in file:
-				for word in line:
-					pass
+			lines = file.read().splitlines()
+			self.current_clicks = int(lines[0])
+			self.cumulative_clicks = int(lines[1])
+			for i in range(len(lines)-2):
+				name, quant = lines[i+2].split(':')
+				quant = int(quant)
+				self.gear[name].quantity = quant
 
 	# Function to make the golden click button show up periodically once it has been unlocked
 	# Contains multiple sub-functions that call eachother
