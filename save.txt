@@ -1,0 +1,37 @@
+400649
+417003
+clicker: 3
+cursor: 12
+click booster: 5
+cps to click: 2
+cps multiplier: 2
+mobster: 0
+golden click: 0
+noob training: 3
+orcish pride: 1
+noob clicker: 0
+gremlin: 0
+gremlin noob: 1
+goblin: 0
+inclined plane: 1
+pulley: 1
+lever: 1
+wedge: 0
+elbow grease: 0
+steam-powered clicker: 0
+coal-fired clicker: 0
+electric clicker: 0
+digital clicker: 0
+floppy disk: 0
+zip disk: 0
+cd: 0
+DVD: 0
+blu-ray: 0
+usb flash drive: 0
+hard drive: 0
+server rack: 0
+robot: 0
+cyborg: 0
+android: 0
+hooloovoo: 0
+hacker: 0

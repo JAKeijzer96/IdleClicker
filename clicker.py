@@ -84,10 +84,10 @@ class Clicker:
 		self.auto_row = -1
 		
 		# Read all gear from a file
-		with open('clicker_gear.txt') as f:
-			for line in f:
-				d = ast.literal_eval(line)
-				self.gear[d['name']] = Gear(**d)  # **d unpacks mapping (dictionary structure)
+		with open('clicker_gear.txt') as file:
+			for line in file:
+				d = ast.literal_eval(line)			# save the lines into a dictionary
+				self.gear[d['name']] = Gear(**d)	# **d unpacks mapping (dictionary structure)
 		# Assign multiplier, synergies and empower values as objects, using the string value from the data file
 		for gear in self.gear.values():
 			if gear.multiplier:
@@ -141,6 +141,8 @@ class Clicker:
 		self.parent.bind('c', lambda x: messagebox.showinfo(title='Cumulative clicks:',
 				message='Cumulative clicks:\n' + self.number_formatter(self.cumulative_clicks)))
 		self.parent.bind('r', self.purchase_toggle)
+		self.parent.bind('s', self.save)
+		self.parent.bind('l', self.load)
 
 		#Call the update function for the first time and start the game
 		self.update()
@@ -150,12 +152,27 @@ class Clicker:
 		help = Toplevel(width=100, height=100)
 		help.title('Help')
 		message_content = 'Welcome to IdleClicker!\n\nThe goal of this game is to gain as many clicks as possible.\n'\
-						'Press [c] to see your cumulative clicks.\nPress [r] to toggle between buying and refunding gear.\n'\
+						'Press [c] to see your cumulative clicks.\n'\
+						'Press [r] to toggle between buying and refunding gear.\n'\
+						'Press [s] to save your progress\n'\
+						'Press [l] to load your progress from a file\n'\
 						'Hover over gear for extra information.\nHappy clicking!'
 		message = tk.Message(help, text=message_content)
 		message.pack()
 		button = tk.Button(help, text='Ok', command=help.destroy)
 		button.pack()
+
+	def save(self, event=None):
+		with open('save.txt', 'w') as file:
+			file.write('{}\n{}\n'.format(self.current_clicks, self.cumulative_clicks))
+			for gear in self.gear.values():
+				file.write('{}: {}\n'.format(gear.name, gear.quantity))
+	
+	def load(self, event=None):
+		with open('save.txt') as file:
+			for line in file:
+				for word in line:
+					pass
 
 	# Function to make the golden click button show up periodically once it has been unlocked
 	# Contains multiple sub-functions that call eachother
