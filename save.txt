@@ -1,10 +1,10 @@
-24
-2400000
+0
+0
 clicker: 0
-cursor: 1
+cursor: 0
 click booster: 0
 cps to click: 0
-cps multiplier: 1
+cps multiplier: 0
 mobster: 0
 golden click: 0
 noob training: 0

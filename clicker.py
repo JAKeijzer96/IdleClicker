@@ -10,9 +10,6 @@
 # -------------------------------
 
 
-
-# TODO
-# https://stackoverflow.com/a/18606459
 try:
 	import tkinter as tk
 except:
@@ -184,22 +181,27 @@ class Clicker:
 		button = tk.Button(help, text='Ok', command=help.destroy)
 		button.pack()
 
+	# Function to save the game to a pre-determined text file
 	def save(self, event=None):
 		with open('save.txt', 'w') as file:
 			file.write('{}\n{}\n'.format(self.current_clicks, self.cumulative_clicks))
 			for gear in self.gear.values():
 				file.write('{}:{}\n'.format(gear.name, gear.quantity))
-				
 	
+	# Function to load the game from a pre-determined text file
 	def load(self, event=None):
 		with open('save.txt') as file:
-			lines = file.read().splitlines()
+			lines = file.read().splitlines()		# splitlines to remove the '\n'
 			self.current_clicks = int(lines[0])
 			self.cumulative_clicks = int(lines[1])
+			# -2 and +2 to skip over the first two lines, which are formatted differently
 			for i in range(len(lines)-2):
 				name, quant = lines[i+2].split(':')
 				quant = int(quant)
 				self.gear[name].quantity = quant
+		# Update the buttons to show the proper quantities
+		for gear in self.gear.values():
+			self.update_gear_button(gear)
 
 	# Function to make the golden click button show up periodically once it has been unlocked
 	# Contains multiple sub-functions that call eachother
@@ -300,12 +302,15 @@ class Clicker:
 		if gear.callback:
 			gear.callback()
 		
-		# Update the button, and disable it when the limit is reached
+		self.update_gear_button(gear)
+		
+	# Function to update gear buttons, and disable it when the limit is reached
+	def update_gear_button(self, gear):
 		if gear.limit and gear.quantity >= gear.limit:
 			gear.button.config(state=tk.DISABLED, 
 				text=gear.description.format(self.number_formatter(gear.cost), '(MAX)'))
 		else:
-			gear.button.config(
+			gear.button.config(state=tk.NORMAL,
 				text=gear.description.format(self.number_formatter(gear.cost), self.number_formatter(gear.quantity)))
 
 	# Function to update the state of the game. It calls itself every second
