@@ -1,37 +1,37 @@
 0
 0
-clicker: 0
-cursor: 0
-click booster: 0
-cps to click: 0
-cps multiplier: 0
-mobster: 0
-golden click: 0
-noob training: 0
-orcish pride: 0
-noob clicker: 0
-gremlin: 0
-gremlin noob: 0
-goblin: 0
-inclined plane: 0
-pulley: 0
-lever: 0
-wedge: 0
-elbow grease: 0
-steam-powered clicker: 0
-coal-fired clicker: 0
-electric clicker: 0
-digital clicker: 0
-floppy disk: 0
-zip disk: 0
-cd: 0
-DVD: 0
-blu-ray: 0
-usb flash drive: 0
-hard drive: 0
-server rack: 0
-robot: 0
-cyborg: 0
-android: 0
-hooloovoo: 0
-hacker: 0
+clicker:0
+cursor:0
+click booster:0
+cps to click:0
+cps multiplier:0
+mobster:0
+golden click:0
+noob training:0
+orcish pride:0
+noob clicker:0
+gremlin:0
+gremlin noob:0
+goblin:0
+inclined plane:0
+pulley:0
+lever:0
+wedge:0
+elbow grease:0
+steam-powered clicker:0
+coal-fired clicker:0
+electric clicker:0
+digital clicker:0
+floppy disk:0
+zip disk:0
+cd:0
+DVD:0
+blu-ray:0
+usb flash drive:0
+hard drive:0
+server rack:0
+robot:0
+cyborg:0
+android:0
+hooloovoo:0
+hacker:0
